@@ -1,4 +1,4 @@
-const User = require("../models/User");
+const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -51,7 +51,7 @@ const loginUser = async (req, res) => {
             token
         });
     } catch (err) {
-        res.status(500).json({ msg: "Server error" });
+        res.status(500).json({ msg: "Server error", error: err.message });
     }
 };
 
