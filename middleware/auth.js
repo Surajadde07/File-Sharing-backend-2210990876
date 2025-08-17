@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 
+//! SURAJ SECTION
 const isAuth = (req, res, next) => {
     try {
         const authHeader = req.header("Authorization");

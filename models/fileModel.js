@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
 
+//! TANEY SECTION
 const fileSchema = new Schema({
     filename: { type: String, required: true },
     filePath: { type: String, required: true },

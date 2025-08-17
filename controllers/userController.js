@@ -2,6 +2,8 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+
+//! SURAJ SECTION
 const registerUser = async (req, res) => {
     try {
         const { username, email, password } = req.body;

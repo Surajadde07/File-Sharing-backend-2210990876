@@ -1,5 +1,7 @@
 const nodemailer = require("nodemailer");
 
+
+//! TANEY SECTION
 const sendEmail = async (to, subject, html) => {
     try {
         const transporter = nodemailer.createTransport({
