@@ -41,4 +41,89 @@ router.post("/upload", isAuth, upload.single("file"), async (req, res) => {
     }
 });
 
+
+
+router.get("/download/:uuid", isAuth, async (req, res) => {
+    try {
+        const file = await File.findOne({ uuid: req.params.uuid });
+        
+        if (!file) {
+            return res.status(404).json({ msg: "File not found" });
+        }
+
+        if (new Date() > file.expiryTime) {
+            return res.status(410).json({ msg: "File has expired" });
+        }
+
+        if (file.createdBy.toString() !== req.user.id) {
+            return res.status(403).json({ msg: "Access denied. You can only download files you uploaded." });
+        }
+
+        if (!fs.existsSync(file.filePath)) {
+            return res.status(404).json({ msg: "File not found on server" });
+        }
+
+        file.downloadCount += 1;
+        await file.save();
+
+        res.download(file.filePath, file.filename);
+    } catch (err) {
+        console.error("Download error:", err);
+        res.status(500).json({ msg: "Server error", error: err.message });
+    }
+});
+
+router.get("/info/:uuid", isAuth, async (req, res) => {
+    try {
+        const file = await File.findOne({ uuid: req.params.uuid });
+        
+        if (!file) {
+            return res.status(404).json({ msg: "File not found" });
+        }
+
+        if (file.createdBy.toString() !== req.user.id) {
+            return res.status(403).json({ msg: "Access denied. You can only view files you uploaded." });
+        }
+
+        res.json({
+            filename: file.filename,
+            uploadTime: file.uploadTime,
+            expiryTime: file.expiryTime,
+            downloadCount: file.downloadCount,
+            expired: new Date() > file.expiryTime,
+            createdBy: file.createdBy
+        });
+    } catch (err) {
+        console.error("File info error:", err);
+        res.status(500).json({ msg: "Server error", error: err.message });
+    }
+});
+
+router.get("/my-files", isAuth, async (req, res) => {
+    try {
+        const files = await File.find({ createdBy: req.user.id })
+            .select('filename uuid uploadTime expiryTime downloadCount')
+            .sort({ uploadTime: -1 });
+
+        res.json({
+            message: "Files retrieved successfully",
+            count: files.length,
+            files: files.map(file => ({
+                id: file._id,
+                uuid: file.uuid,
+                filename: file.filename,
+                uploadTime: file.uploadTime,
+                expiryTime: file.expiryTime,
+                downloadCount: file.downloadCount,
+                expired: new Date() > file.expiryTime,
+                downloadLink: `${process.env.BASE_URL || 'http://localhost:5000'}/api/files/download/${file.uuid}`
+            }))
+        });
+    } catch (err) {
+        console.error("My files error:", err);
+        res.status(500).json({ msg: "Server error", error: err.message });
+    }
+});
+
+
 module.exports = router;
