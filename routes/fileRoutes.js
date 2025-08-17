@@ -6,8 +6,9 @@ const isAuth = require("../middleware/auth");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const fs = require("fs");
+const sendEmail = require("../utils/sendEmail");
 
-// Upload file (Authentication required)
+//! TANISHA SECTION
 router.post("/upload", isAuth, upload.single("file"), async (req, res) => {
     try {
         if (!req.file) {
@@ -18,8 +19,8 @@ router.post("/upload", isAuth, upload.single("file"), async (req, res) => {
             filename: req.file.originalname,
             filePath: req.file.path,
             uuid: uuidv4(),
-            expiryTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-            createdBy: req.user.id, // Link file to authenticated user
+            expiryTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            createdBy: req.user.id,
         });
 
         await file.save();
@@ -42,37 +43,7 @@ router.post("/upload", isAuth, upload.single("file"), async (req, res) => {
 });
 
 
-
-router.get("/download/:uuid", isAuth, async (req, res) => {
-    try {
-        const file = await File.findOne({ uuid: req.params.uuid });
-        
-        if (!file) {
-            return res.status(404).json({ msg: "File not found" });
-        }
-
-        if (new Date() > file.expiryTime) {
-            return res.status(410).json({ msg: "File has expired" });
-        }
-
-        if (file.createdBy.toString() !== req.user.id) {
-            return res.status(403).json({ msg: "Access denied. You can only download files you uploaded." });
-        }
-
-        if (!fs.existsSync(file.filePath)) {
-            return res.status(404).json({ msg: "File not found on server" });
-        }
-
-        file.downloadCount += 1;
-        await file.save();
-
-        res.download(file.filePath, file.filename);
-    } catch (err) {
-        console.error("Download error:", err);
-        res.status(500).json({ msg: "Server error", error: err.message });
-    }
-});
-
+//! TANEY SECTION
 router.post("/share/:uuid", isAuth, async (req, res) => {
     try {
         const { recipientEmail } = req.body;
@@ -110,10 +81,44 @@ router.post("/share/:uuid", isAuth, async (req, res) => {
     }
 });
 
+//! SOUBHAGYA SECTION
+
+router.get("/download/:uuid", isAuth, async (req, res) => {
+    try {
+        const file = await File.findOne({ uuid: req.params.uuid });
+
+        if (!file) {
+            return res.status(404).json({ msg: "File not found" });
+        }
+
+        if (new Date() > file.expiryTime) {
+            return res.status(410).json({ msg: "File has expired" });
+        }
+
+        if (file.createdBy.toString() !== req.user.id && req.user.email !== file.receiverEmail) {
+            return res.status(403).json({ msg: "Access denied. You are not the recipient or uploader." });
+        }
+
+        if (!fs.existsSync(file.filePath)) {
+            return res.status(404).json({ msg: "File not found on server" });
+        }
+
+        file.downloadCount += 1;
+        await file.save();
+
+        res.download(file.filePath, file.filename);
+    } catch (err) {
+        console.error("Download error:", err);
+        res.status(500).json({ msg: "Server error", error: err.message });
+    }
+});
+
+
+
 router.get("/info/:uuid", isAuth, async (req, res) => {
     try {
         const file = await File.findOne({ uuid: req.params.uuid });
-        
+
         if (!file) {
             return res.status(404).json({ msg: "File not found" });
         }
