@@ -73,6 +73,43 @@ router.get("/download/:uuid", isAuth, async (req, res) => {
     }
 });
 
+router.post("/share/:uuid", isAuth, async (req, res) => {
+    try {
+        const { recipientEmail } = req.body;
+        const file = await File.findOne({ uuid: req.params.uuid });
+
+        if (!file) {
+            return res.status(404).json({ msg: "File not found" });
+        }
+
+        if (file.createdBy.toString() !== req.user.id) {
+            return res.status(403).json({ msg: "Access denied" });
+        }
+
+        const downloadLink = `${process.env.BASE_URL || 'http://localhost:5000'}/api/files/download/${file.uuid}`;
+        const subject = "You've received a file!";
+        const html = `
+        <h2>Hello,</h2>
+        <p>You have received a file via File Sharing App.</p>
+        <p><b>Filename:</b> ${file.filename}</p>
+        <p><b>Expires:</b> ${file.expiryTime.toLocaleString()}</p>
+        <a href="${downloadLink}">Click here to download</a>
+        <br/><br/>
+        <small>This link will expire in 24 hours.</small> 
+    `;
+
+        await sendEmail(recipientEmail, subject, html);
+
+        file.receiverEmail = recipientEmail;
+        await file.save();
+
+        res.json({ message: "Download link sent successfully via email", file, recipientEmail, downloadLink });
+    } catch (err) {
+        console.error("Email share error:", err);
+        res.status(500).json({ msg: "Server error", error: err.message });
+    }
+});
+
 router.get("/info/:uuid", isAuth, async (req, res) => {
     try {
         const file = await File.findOne({ uuid: req.params.uuid });
