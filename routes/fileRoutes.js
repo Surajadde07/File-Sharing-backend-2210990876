@@ -9,6 +9,7 @@ const fs = require("fs");
 const sendEmail = require("../utils/sendEmail");
 
 //! TANISHA SECTION
+//! UPDATED AND ALIGNED
 router.post("/upload", isAuth, upload.single("file"), async (req, res) => {
     try {
         if (!req.file) {
