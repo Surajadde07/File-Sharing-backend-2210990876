@@ -113,8 +113,6 @@ router.get("/download/:uuid", isAuth, async (req, res) => {
     }
 });
 
-
-
 router.get("/info/:uuid", isAuth, async (req, res) => {
     try {
         const file = await File.findOne({ uuid: req.params.uuid });
