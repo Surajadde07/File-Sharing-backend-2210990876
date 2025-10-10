@@ -1,81 +1,34 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { filesAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import {
-    CloudArrowUpIcon,
     DocumentIcon,
-    XMarkIcon
+    ShareIcon,
+    ArrowDownTrayIcon,
+    ClockIcon,
+    ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
+
 //! TANISHA DID THIS CHANGE
-const FileUpload = () => {
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [uploading, setUploading] = useState(false);
-    const [uploadedFile, setUploadedFile] = useState(null);
-    const fileInputRef = useRef(null);
-    const navigate = useNavigate();
+const MyFiles = () => {
+    const [files, setFiles] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const handleFileSelect = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            // Check file size (10MB limit)
-            if (file.size > 10 * 1024 * 1024) {
-                toast.error('File size must be less than 10MB');
-                return;
-            }
-            setSelectedFile(file);
-            setUploadedFile(null);
-        }
-    };
+    useEffect(() => {
+        fetchMyFiles();
+    }, []);
 
-    const handleDragOver = (e) => {
-        e.preventDefault();
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            if (file.size > 10 * 1024 * 1024) {
-                toast.error('File size must be less than 10MB');
-                return;
-            }
-            setSelectedFile(file);
-            setUploadedFile(null);
-        }
-    };
-
-    const removeSelectedFile = () => {
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    const handleUpload = async () => {
-        if (!selectedFile) {
-            toast.error('Please select a file to upload');
-            return;
-        }
-
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
+    const fetchMyFiles = async () => {
         try {
-            const response = await filesAPI.upload(formData);
-            setUploadedFile(response.data.file);
-            setSelectedFile(null);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-            toast.success('File uploaded successfully!');
+            const response = await filesAPI.getMyFiles();
+            setFiles(response.data.files);
         } catch (error) {
-            console.error('Upload error:', error);
-            toast.error(error.response?.data?.msg || 'Upload failed. Please try again.');
+            console.error('Fetch files error:', error);
+            toast.error('Failed to fetch files');
         } finally {
-            setUploading(false);
+            setLoading(false);
         }
     };
 
@@ -84,173 +37,187 @@ const FileUpload = () => {
         toast.success('Link copied to clipboard!');
     };
 
-    const formatFileSize = (bytes) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    const formatFileSize = (filename) => {
+        // This is a simple estimation based on filename
+        // In a real app, you'd store the file size in the backend
+        return 'Unknown size';
     };
 
+    const formatTimeRemaining = (expiryTime) => {
+        const now = new Date();
+        const expiry = new Date(expiryTime);
+        const diffMs = expiry - now;
+
+        if (diffMs <= 0) {
+            return 'Expired';
+        }
+
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (diffHours > 0) {
+            return `${diffHours}h ${diffMinutes}m remaining`;
+        } else {
+            return `${diffMinutes}m remaining`;
+        }
+    };
+
+    const getFileIcon = (filename) => {
+        const extension = filename.split('.').pop().toLowerCase();
+        switch (extension) {
+            case 'pdf':
+                return '📄';
+            case 'doc':
+            case 'docx':
+                return '📝';
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+                return '🖼️';
+            case 'zip':
+            case 'rar':
+                return '📦';
+            default:
+                return '📄';
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="max-w-6xl mx-auto">
+                <div className="animate-pulse">
+                    <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
+                    <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-20 bg-gray-300 rounded"></div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Upload File</h1>
-                <p className="mt-2 text-gray-600">
-                    Upload your files securely. All files expire automatically in 24 hours.
-                </p>
+        <div className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">My Files</h1>
+                    <p className="mt-2 text-gray-600">
+                        Manage your uploaded files and share them securely.
+                    </p>
+                </div>
+                <Link
+                    to="/upload"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+                >
+                    <DocumentIcon className="h-5 w-5 mr-2" />
+                    Upload New File
+                </Link>
             </div>
 
-            {/* Upload Area */}
-            {!uploadedFile && (
-                <div className="bg-white rounded-lg shadow-md p-8">
-                    <div
-                        className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-400 transition-colors"
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
+            {files.length === 0 ? (
+                <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                    <DocumentIcon className="mx-auto h-16 w-16 text-gray-400" />
+                    <h3 className="mt-4 text-lg font-medium text-gray-900">
+                        No files uploaded yet
+                    </h3>
+                    <p className="mt-2 text-gray-500">
+                        Start by uploading your first file to share with others.
+                    </p>
+                    <Link
+                        to="/upload"
+                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                     >
-                        <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">
-                            Drop your file here, or{' '}
-                            <button
-                                type="button"
-                                className="text-blue-600 hover:text-blue-500"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                browse
-                            </button>
+                        Upload Your First File
+                    </Link>
+                </div>
+            ) : (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <h3 className="text-lg font-medium text-gray-900">
+                            Files ({files.length})
                         </h3>
-                        <p className="mt-2 text-sm text-gray-500">
-                            PNG, JPG, PDF, DOC, DOCX up to 10MB
-                        </p>
-
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            className="hidden"
-                            onChange={handleFileSelect}
-                            accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.txt,.zip,.rar"
-                        />
                     </div>
 
-                    {/* Selected File */}
-                    {selectedFile && (
-                        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <DocumentIcon className="h-8 w-8 text-blue-600" />
-                                    <div className="ml-3">
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {selectedFile.name}
-                                        </p>
-                                        <p className="text-sm text-gray-500">
-                                            {formatFileSize(selectedFile.size)}
-                                        </p>
+                    <div className="divide-y divide-gray-200">
+                        {files.map((file) => (
+                            <div key={file.id} className="px-6 py-4 hover:bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center min-w-0 flex-1">
+                                        <div className="text-2xl mr-4">
+                                            {getFileIcon(file.filename)}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center">
+                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                    {file.filename}
+                                                </p>
+                                                {file.expired && (
+                                                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
+                                                        Expired
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center mt-1 space-x-4 text-sm text-gray-500">
+                                                <span className="flex items-center">
+                                                    <ClockIcon className="h-4 w-4 mr-1" />
+                                                    {formatTimeRemaining(file.expiryTime)}
+                                                </span>
+                                                <span>
+                                                    Downloaded {file.downloadCount} time{file.downloadCount !== 1 ? 's' : ''}
+                                                </span>
+                                                <span>
+                                                    Uploaded {new Date(file.uploadTime).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2">
+                                        {!file.expired && (
+                                            <>
+                                                <button
+                                                    onClick={() => copyToClipboard(file.downloadLink)}
+                                                    className="p-2 text-gray-400 hover:text-blue-600 rounded-md"
+                                                    title="Copy download link"
+                                                >
+                                                    <ArrowDownTrayIcon className="h-5 w-5" />
+                                                </button>
+                                                <Link
+                                                    to={`/share/${file.uuid}`}
+                                                    className="p-2 text-gray-400 hover:text-green-600 rounded-md"
+                                                    title="Share via email"
+                                                >
+                                                    <ShareIcon className="h-5 w-5" />
+                                                </Link>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={removeSelectedFile}
-                                    className="text-gray-400 hover:text-red-500"
-                                >
-                                    <XMarkIcon className="h-5 w-5" />
-                                </button>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Upload Button */}
-                    {selectedFile && (
-                        <div className="mt-6">
-                            <button
-                                onClick={handleUpload}
-                                disabled={uploading}
-                                className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                            >
-                                {uploading ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    'Upload File'
-                                )}
-                            </button>
-                        </div>
-                    )}
+                        ))}
+                    </div>
                 </div>
             )}
 
-            {/* Upload Success */}
-            {uploadedFile && (
-                <div className="bg-white rounded-lg shadow-md p-8">
-                    <div className="text-center">
-                        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+            {files.length > 0 && (
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <ClockIcon className="h-5 w-5 text-blue-400" />
                         </div>
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">
-                            File uploaded successfully!
-                        </h3>
-                        <p className="mt-2 text-sm text-gray-500">
-                            Your file has been uploaded and is ready to share.
-                        </p>
-                    </div>
-
-                    <div className="mt-6 space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Filename
-                            </label>
-                            <p className="mt-1 text-sm text-gray-900">{uploadedFile.filename}</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Expires
-                            </label>
-                            <p className="mt-1 text-sm text-gray-900">
-                                {new Date(uploadedFile.expiryTime).toLocaleString()}
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Download Link
-                            </label>
-                            <div className="mt-1 flex">
-                                <input
-                                    type="text"
-                                    readOnly
-                                    value={uploadedFile.downloadLink}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-sm"
-                                />
-                                <button
-                                    onClick={() => copyToClipboard(uploadedFile.downloadLink)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 text-sm"
-                                >
-                                    Copy
-                                </button>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-blue-800">
+                                File Expiration Notice
+                            </h3>
+                            <div className="mt-2 text-sm text-blue-700">
+                                <p>
+                                    All uploaded files automatically expire after 24 hours for security purposes.
+                                    Expired files cannot be downloaded and are automatically removed from the server.
+                                </p>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="mt-6 flex space-x-3">
-                        <button
-                            onClick={() => navigate(`/share/${uploadedFile.uuid}`)}
-                            className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
-                        >
-                            Share via Email
-                        </button>
-                        <button
-                            onClick={() => {
-                                setUploadedFile(null);
-                                setSelectedFile(null);
-                            }}
-                            className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700"
-                        >
-                            Upload Another
-                        </button>
                     </div>
                 </div>
             )}
@@ -258,4 +225,4 @@ const FileUpload = () => {
     );
 };
 
-export default FileUpload;
+export default MyFiles;
