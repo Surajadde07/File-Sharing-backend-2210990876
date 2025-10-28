@@ -33,6 +33,11 @@ api.interceptors.response.use(
 export const authAPI = {
     register: (userData) => api.post('/user/register', userData),
     login: (credentials) => api.post('/user/login', credentials),
+    // Google Auth
+    googleLogin: () => {
+        window.location.href = `${API_BASE_URL}/auth/google`;
+    },
+    checkAuthStatus: () => api.get('/auth/status'),
 };
 
 //! TANISHA DID THIS CHANGE
