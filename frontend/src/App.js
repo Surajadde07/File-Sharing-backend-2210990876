@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard';
 import FileUpload from './components/FileUpload';
 import MyFiles from './components/MyFiles';
 import FileShare from './components/FileShare';
+import AuthCallback from './components/AuthCallback';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -42,6 +43,9 @@ function App() {
                   <Register />
                 </PublicRoute>
               } />
+              
+              {/* Google Auth Callback Route */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={

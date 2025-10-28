@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -48,12 +48,20 @@ const Navbar = () => {
                                 >
                                     My Files
                                 </Link>
-                                <button
-                                    onClick={handleLogout}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
-                                >
-                                    Logout
-                                </button>
+                                
+                                {/* User Profile */}
+                                <div className="flex items-center space-x-3">
+                                    
+                                    <span className="text-sm text-gray-700">
+                                        Welcome, {user?.username || 'User'}
+                                    </span>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
                             </>
                         ) : (
                             <>
@@ -79,3 +87,6 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+
+
