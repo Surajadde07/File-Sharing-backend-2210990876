@@ -45,6 +45,13 @@ app.use("/api/user", userRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/auth", authRoutes); // Google Auth routes
 
+
+
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/files', require('./routes/fileRoutes'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
+
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log("DB Error:", err));

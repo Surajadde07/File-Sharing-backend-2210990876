@@ -57,4 +57,11 @@ export const filesAPI = {
     }),
 };
 
+//! ANALYTICS FEATURE - Final Project Feature
+export const analyticsAPI = {
+    getAnalytics: () => api.get('/analytics'),
+    getFileActivity: (fileId) => api.get(`/analytics/file/${fileId}`)
+};
+
+
 export default api;

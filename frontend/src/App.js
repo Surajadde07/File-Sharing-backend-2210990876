@@ -10,6 +10,7 @@ import FileUpload from './components/FileUpload';
 import MyFiles from './components/MyFiles';
 import FileShare from './components/FileShare';
 import AuthCallback from './components/AuthCallback';
+import Analytics from './components/Analytics';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -68,6 +69,7 @@ function App() {
                   <FileShare />
                 </ProtectedRoute>
               } />
+              <Route path="/analytics" element={<Analytics />} />
             </Routes>
           </main>
           <Toaster 
