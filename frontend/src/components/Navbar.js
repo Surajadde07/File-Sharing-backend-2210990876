@@ -26,8 +26,6 @@ const Navbar = () => {
                         <span className="text-xl font-bold text-gray-800">WeShare</span>
                     </Link>
 
-                    <Link to="/analytics" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Analytics</Link>
-
                     {/* Navigation Links */}
                     <div className="flex items-center space-x-4">
                         {isAuthenticated ? (
@@ -50,10 +48,16 @@ const Navbar = () => {
                                 >
                                     My Files
                                 </Link>
-                                
+                                <Link
+                                    to="/analytics"
+                                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                                >
+                                    Analytics
+                                </Link>
+
                                 {/* User Profile */}
                                 <div className="flex items-center space-x-3">
-                                    
+
                                     <span className="text-sm text-gray-700">
                                         Welcome, {user?.username || 'User'}
                                     </span>
@@ -81,7 +85,7 @@ const Navbar = () => {
                                 </Link>
                             </>
 
-                        
+
                         )}
                     </div>
                 </div>
